@@ -25,6 +25,7 @@ generation_config = {
 }
 
 MODEL_NAME = "gemini-1.5-pro"
+score=0
 
 st.title("Political Science MCQ Generator")
 topic = st.text_input("Enter a topic:", placeholder="e.g., Political Theory")
