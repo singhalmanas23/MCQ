@@ -24,15 +24,13 @@ generation_config = {
     "response_mime_type": "text/plain",
 }
 
-MODEL_NAME = "gemini-1.5-pro"  # Update to your preferred model
+MODEL_NAME = "gemini-1.5-pro"
 
-st.title("MCQ Generator")
+st.title("Political Science MCQ Generator")
 topic = st.text_input("Enter a topic:", placeholder="e.g., Political Theory")
+difficulty = st.selectbox("Select difficulty level:", ["Easy", "Medium", "Hard"], index=0)
 
-# Display model information
-
-
-# Initialize session state for MCQs and user answers
+# Initialize session state
 if "mcqs" not in st.session_state:
     st.session_state["mcqs"] = []
 
@@ -46,14 +44,13 @@ if st.button("Generate MCQs"):
 
     with st.spinner("Generating MCQs..."):
         try:
-            # Create model with configuration
             model = genai.GenerativeModel(
                 model_name=MODEL_NAME,
                 generation_config=generation_config,
             )
 
-            # Improved prompt with strict formatting
-            prompt = f"""Generate 10 high-quality multiple choice questions about {topic}.
+            # Custom prompt based on difficulty level
+            prompt = f"""Generate 10 high-quality multiple choice questions about {topic} at {difficulty} difficulty level.
             Follow these rules STRICTLY:
             1. Format each question EXACTLY like this:
                 Q1) [Question text]
@@ -63,10 +60,18 @@ if st.button("Generate MCQs"):
                 D) [Option 4]
                 Answer: [Letter]
                 
-            2. Questions should cover different aspects of {topic}
-            3. Options must be plausible but only one correct answer
-            4. Avoid repeating question patterns
-            5. Include both conceptual and practical questions"""
+            2. Difficulty levels:
+                - Easy: Basic concepts, straightforward answers.
+                - Medium: Requires analysis or application of concepts.
+                - Hard: Focus on theories, statements, and identifying the correct theorist.
+                  - Include quotes or statements and ask whose theory it is.
+                  - Include questions about specific political theories and their proponents.
+                
+            3. Questions should cover different aspects of {topic}.
+            4. Options must be plausible but only one correct answer.
+            5. Avoid repeating question patterns.
+            6. Include both conceptual and practical questions.
+            7. Adjust question complexity strictly based on {difficulty} level."""
 
             response = model.generate_content(prompt)
 
@@ -95,30 +100,26 @@ if st.button("Generate MCQs"):
         except Exception as e:
             st.error(f"Error generating MCQs: {str(e)}")
             st.error("Please check your API key and internet connection")
+
 if "mcqs" in st.session_state and st.session_state["mcqs"]:
-    st.subheader(f"Generated MCQs about {topic}")
+    st.subheader(f"Generated {difficulty} MCQs about {topic}")
     score = 0
     for idx, mcq in enumerate(st.session_state["mcqs"]):
         st.write(f"**Q{idx + 1}. {mcq['question']}**")
+        options = [f"{chr(65 + i)}. {mcq['options'][i]}" for i in range(4)]
+        options.insert(0, "Select an option")
         
-        # Create a list of options with both the letter and the text
-        options = [f"{chr(65 + i)}. {mcq['options'][i]}" for i in range(4)]  # A, B, C, D
-        options.insert(0, "Select an option")  # Add the default option
-        
-        # Display the radio button with the options
         selected_option = st.radio(
             f"Choose an option for Q{idx + 1}:",
             options=options,
-            index=0,  # Default to "Select an option"
+            index=0,
             key=f"q{idx + 1}"
         )
         
-        # Extract the selected letter (A, B, C, D) from the selected option
         if selected_option and selected_option != "Select an option":
-            selected_letter = selected_option.split(".")[0]  # Extract the letter (A, B, C, D)
+            selected_letter = selected_option.split(".")[0]
             st.session_state["user_answers"][f"q{idx + 1}"] = selected_letter
             
-            # Check if the selected answer is correct
             if selected_letter == mcq['correct']:
                 st.success(f"Correct! ✅ The answer is {mcq['correct']}.")
                 score += 1
@@ -130,5 +131,6 @@ if "mcqs" in st.session_state and st.session_state["mcqs"]:
         st.markdown("---")
 
     st.subheader(f"Your Score: {score} / {len(st.session_state['mcqs'])}")
+    
 st.markdown("---")
 st.caption("Powered by Manas Singhal☠️")
