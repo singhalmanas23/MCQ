@@ -131,6 +131,11 @@ if "mcqs" in st.session_state and st.session_state["mcqs"]:
         st.markdown("---")
 
     st.subheader(f"Your Score: {score} / {len(st.session_state['mcqs'])}")
+
+if score == 10:
+    st.balloons()  # Trigger balloons animation
+    st.success("Perfect Score! 🎉 Amazing job!")
+
     
 st.markdown("---")
 st.caption("Powered by Manas Singhal☠️")
